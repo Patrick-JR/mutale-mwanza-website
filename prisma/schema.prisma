@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// =============================================================================
+// AUTH
+// =============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  passwordHash  String
+  role          String    @default("EDITOR") // ADMINISTRATOR | EDITOR
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  avatarUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  activity      ActivityLog[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// =============================================================================
+// PUBLIC-FACING CONTENT
+// =============================================================================
+
+model Booking {
+  id                String   @id @default(cuid())
+  fullName          String
+  company           String?
+  email             String
+  phone             String?
+  enquiryType       String
+  service           String
+  eventDate         String?
+  eventTime         String?
+  eventLocation     String?
+  eventType         String?
+  expectedAudience  String?
+  brandName         String?
+  campaignProduct   String?
+  campaignObjective String?
+  preferredTiming   String?
+  budget            String?
+  message           String?
+  status            String   @default("NEW") // NEW | REVIEWING | CONTACTED | CONFIRMED | DECLINED | COMPLETED
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Brand {
+  id              String   @id @default(cuid())
+  name            String
+  logo            String?
+  website         String?
+  description     String?
+  type            String?
+  category        String?  // Fashion | Beauty | Retail | Lifestyle | Hospitality | Entrepreneurship
+  relationship    String?  // Featured Brand | Promotional Collaboration | etc.
+  featured        Boolean  @default(false)
+  sortOrder       Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  shortDescription String?
+  fullDescription  String?
+  icon        String?
+  features    String?  // pipe-delimited list
+  imageUrl    String?
+  featured    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GalleryImage {
+  id          String   @id @default(cuid())
+  title       String
+  imageUrl    String
+  category    String
+  caption     String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Video {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  thumbnailUrl String?
+  videoUrl     String
+  category     String
+  sourceType   String   @default("UPLOAD") // UPLOAD | YOUTUBE | EXTERNAL
+  featured     Boolean  @default(false)
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  quote     String
+  author    String
+  role      String?
+  company   String?
+  avatarUrl String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SiteSettings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  group     String   @default("general") // general | contact | social | seo | ai
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FAQ {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  category  String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MediaItem {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  type        String   // media-kit | biography | image | video
+  fileUrl     String
+  fileName    String?
+  fileSize    Int?
+  category    String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SocialLink {
+  id        String   @id @default(cuid())
+  platform  String   @unique // instagram | facebook | linkedin | youtube | tiktok | x
+  url       String
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =============================================================================
+// ADMIN
+// =============================================================================
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  actorName String   // snapshot in case user is deleted
+  action    String   // "Updated Homepage Hero" | "Added Brand" | etc.
+  target    String?  // e.g. "Brands" | "Home" | "Settings"
+  metadata  String?  // JSON string for extra context
+  createdAt DateTime @default(now())
+}
